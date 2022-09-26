@@ -20,11 +20,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
 
-      - name: build linux
-        run: GOOS=linux go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-linux cmd/kubectl-finalize/main.go
+      - name: build linux-amd64
+        run: GOOS=linux go build -a -v -ldflags="-w -s" -o kubectl-finalize-linux-amd64 cmd/kubectl-finalize/main.go
 
-      - name: build darwin
-        run: GOOS=darwin go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-darwin cmd/kubectl-finalize/main.go
+      - name: build darwin-arm64
+        run: GOOS=darwin GOARCH="arm64" go build -a -v -ldflags="-w -s" -o kubectl-finalize-darwin-arm64 cmd/kubectl-finalize/main.go
+
+      - name: build darwin-amd64
+        run: GOOS=darwin GOARCH="amd64" go build -a -v -ldflags="-w -s" -o kubectl-finalize-darwin-amd64 cmd/kubectl-finalize/main.go
 
       - name: Create Release
         id: create_release
@@ -41,13 +44,19 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: linux
-          path: kubectl-finalize-linux
+          path: kubectl-finalize-linux-amd64
 
       - name: save darwin artifact in Actions
         uses: actions/upload-artifact@v1.0.0
         with:
           name: darwin
-          path: kubectl-finalize-darwin
+          path: kubectl-finalize-darwin-arm64
+
+      - name: save darwin artifact in Actions
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: darwin
+          path: kubectl-finalize-darwin-amd64
 
       - name: upload linux release asset
         uses: actions/upload-release-asset@v1.0.1
@@ -55,16 +64,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./kubectl-finalize-linux
-          asset_name: kubectl-finalize-linux
+          asset_path: ./kubectl-finalize-linux-amd64
+          asset_name: kubectl-finalize-linux-amd64
           asset_content_type: application/binary
 
-      - name: upload darwin release asset
+      - name: upload darwin-arm64 release asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./kubectl-finalize-darwin
-          asset_name: kubectl-finalize-darwin
+          asset_path: ./kubectl-finalize-darwin-arm64
+          asset_name: kubectl-finalize-darwin-arm64
+          asset_content_type: application/binary
+
+      - name: upload darwin-amd64 release asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./kubectl-finalize-darwin-amd64
+          asset_name: kubectl-finalize-darwin-amd64
           asset_content_type: application/binary
