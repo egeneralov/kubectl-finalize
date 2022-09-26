@@ -24,7 +24,7 @@ jobs:
         run: GOOS=linux go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-linux cmd/kubectl-finalize/main.go
 
       - name: build darwin
-        run: GOOS=darwin go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-darwin . cmd/kubectl-finalize/main.go
+        run: GOOS=darwin go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-darwin cmd/kubectl-finalize/main.go
 
       - name: Create Release
         id: create_release
