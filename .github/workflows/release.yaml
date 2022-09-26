@@ -1,0 +1,70 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+name: Release
+
+jobs:
+  build:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.18.3
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.18.3
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: build linux
+        run: GOOS=linux go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-linux cmd/kubectl-finalize/main.go
+
+      - name: build darwin
+        run: GOOS=darwin go build -a -v -installsuffix cgo -ldflags="-w -s" -o kubectl-finalize-darwin . cmd/kubectl-finalize/main.go
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: save linux artifact in Actions
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: linux
+          path: kubectl-finalize-linux
+
+      - name: save darwin artifact in Actions
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: darwin
+          path: kubectl-finalize-darwin
+
+      - name: upload linux release asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./kubectl-finalize-linux
+          asset_name: kubectl-finalize-linux
+          asset_content_type: application/binary
+
+      - name: upload darwin release asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./kubectl-finalize-darwin
+          asset_name: kubectl-finalize-darwin
+          asset_content_type: application/binary
